@@ -1,0 +1,48 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7f4;
+  text-align: center;
+}
+
+.container {
+  margin-top: 60px;
+}
+
+h1 {
+  font-size: 32px;
+}
+
+#drop-area {
+  margin: 40px auto;
+  padding: 40px;
+  width: 300px;
+  border: 2px dashed #ccc;
+  border-radius: 15px;
+  background: #fff;
+  cursor: pointer;
+}
+
+#drop-area:hover {
+  border-color: #4CAF50;
+}
+
+#upload-label {
+  display: block;
+  color: #444;
+}
+
+#upload-label span {
+  font-size: 12px;
+  color: gray;
+}
+
+#preview img {
+  margin-top: 20px;
+  width: 200px;
+  border-radius: 10px;
+}
+
+#result {
+  margin-top: 20px;
+  font-size: 18px;
+}

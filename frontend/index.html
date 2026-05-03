@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fresh Insight</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream:     #f7f3ec;
+  --dark:      #1a1a1a;
+  --green:     #3d6b44;
+  --green-lt:  #6a9e5e;
+  --green-bg:  #e8f2e9;
+  --amber:     #c47d0e;
+  --amber-bg:  #fff4de;
+  --red:       #c0392b;
+  --red-bg:    #fdecea;
+  --card:      #ffffff;
+  --border:    #e0d8cc;
+  --muted:     #7a7060;
+  --stat-bg:   #f4f0e8;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--dark);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 80px;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; width: 100%; max-width: 560px; }
+
+/* ── header ── */
+header { text-align: center; margin-bottom: 40px; }
+.logo-dot {
+  display: inline-block; width: 10px; height: 10px;
+  background: var(--green); border-radius: 50%;
+  margin-right: 6px; vertical-align: middle;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:.6} }
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  font-weight: 700; letter-spacing: -0.02em; line-height: 1.1;
+}
+.tagline { margin-top: 8px; font-size: 0.95rem; color: var(--muted); font-weight: 300; }
+
+/* ── upload zone ── */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: 20px;
+  padding: 40px 24px; text-align: center; cursor: pointer;
+  transition: border-color .25s, background .25s, transform .15s;
+  background: var(--card); position: relative; overflow: hidden;
+}
+.upload-zone:hover, .upload-zone.drag { border-color: var(--green); background: #f0f7f0; transform: translateY(-2px); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 2.2rem; display: block; margin-bottom: 10px; }
+.upload-main { font-size: 1rem; font-weight: 500; }
+.upload-sub  { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+
+/* ── preview ── */
+#preview-wrap { margin-top: 24px; display: none; text-align: center; }
+#preview {
+  max-width: 100%; max-height: 260px; border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.10); object-fit: cover; display: inline-block;
+}
+
+/* ── button ── */
+.btn {
+  display: block; width: 100%; margin-top: 20px; padding: 14px;
+  background: var(--green); color: #fff; border: none; border-radius: 14px;
+  font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500;
+  cursor: pointer; letter-spacing: 0.02em;
+  transition: background .2s, transform .15s, opacity .2s;
+}
+.btn:hover:not(:disabled) { background: var(--green-lt); transform: translateY(-1px); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ── loader ── */
+.loader { display: none; flex-direction: column; align-items: center; gap: 12px; margin: 28px 0; }
+.loader.show { display: flex; }
+.spinner {
+  width: 36px; height: 36px; border: 3px solid var(--border);
+  border-top-color: var(--green); border-radius: 50%;
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-text { font-size: 0.88rem; color: var(--muted); }
+
+/* ── result card ── */
+.result-card {
+  display: none; background: var(--card); border-radius: 20px;
+  padding: 28px; margin-top: 28px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.07);
+  animation: slideUp .4s ease;
+}
+.result-card.show { display: block; }
+@keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+
+/* fruit header */
+.fruit-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+}
+.fruit-name { font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700; letter-spacing: -0.02em; }
+.freshness-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 99px;
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.fresh    { background: var(--green-bg); color: var(--green); }
+.slightly { background: var(--amber-bg); color: var(--amber); }
+.overripe { background: #fff0e0; color: #c05500; }
+.rotten   { background: var(--red-bg);   color: var(--red); }
+
+/* ── section label ── */
+.section-label {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); font-weight: 600; margin: 22px 0 10px;
+}
+
+/* ── nutrition grid ── */
+.nutrition-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.nut-box { background: var(--stat-bg); border-radius: 14px; padding: 14px 12px; }
+.nut-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 5px; }
+.nut-value { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; line-height: 1; }
+.nut-unit  { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; color: var(--muted); margin-left: 2px; }
+
+/* ── vitamins row ── */
+.vitamins-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.vit-box { background: var(--green-bg); border-radius: 14px; padding: 12px; text-align: center; }
+.vit-name  { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--green); font-weight: 600; margin-bottom: 4px; }
+.vit-value { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--green); }
+.vit-unit  { font-size: 0.68rem; color: var(--green-lt); margin-left: 2px; }
+
+/* ── info cards ── */
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.info-box { background: var(--stat-bg); border-radius: 14px; padding: 14px 16px; }
+.info-box.full { grid-column: 1 / -1; }
+.info-icon { font-size: 1.1rem; margin-bottom: 6px; display: block; }
+.info-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.info-text { font-size: 0.88rem; color: var(--dark); line-height: 1.45; font-weight: 400; }
+
+/* health benefits */
+.benefits-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.benefits-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 0.88rem; line-height: 1.4; }
+.benefits-list li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 0.85rem; flex-shrink: 0; margin-top: 1px; }
+
+/* ── error ── */
+.error-box {
+  display: none; margin-top: 20px; padding: 14px 18px;
+  background: var(--red-bg); border-left: 4px solid var(--red);
+  border-radius: 10px; color: var(--red); font-size: 0.9rem;
+  animation: slideUp .3s ease;
+}
+.error-box.show { display: block; }
+
+/* ── reset ── */
+.reset-btn {
+  background: none; border: none; color: var(--muted); font-size: 0.82rem;
+  cursor: pointer; margin-top: 14px; display: block; text-align: center;
+  text-decoration: underline; font-family: 'DM Sans', sans-serif;
+}
+.reset-btn:hover { color: var(--dark); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1><span class="logo-dot"></span>Fresh Insight</h1>
+    <p class="tagline">Upload a fruit or vegetable — get nutrients &amp; freshness instantly</p>
+  </header>
+
+  <div class="upload-zone" id="dropZone">
+    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp"/>
+    <span class="upload-icon">🍎</span>
+    <p class="upload-main">Drop your image here</p>
+    <p class="upload-sub">or click to browse — JPG, PNG, WEBP</p>
+  </div>
+
+  <div id="preview-wrap"><img id="preview" alt="Preview"/></div>
+
+  <button class="btn" id="analyseBtn" disabled>Analyse Fruit / Vegetable</button>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p class="loader-text">Identifying &amp; fetching full nutrition info…</p>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="result-card" id="resultCard">
+
+    <!-- Header -->
+    <div class="fruit-header">
+      <div class="fruit-name" id="fruitName">—</div>
+      <span class="freshness-badge" id="freshnessBadge">—</span>
+    </div>
+
+    <!-- Macros -->
+    <div class="section-label">Nutrition per 100g</div>
+    <div class="nutrition-grid">
+      <div class="nut-box"><div class="nut-label">Calories</div><div class="nut-value" id="calories">—<span class="nut-unit">kcal</span></div></div>
+      <div class="nut-box"><div class="nut-label">Protein</div><div class="nut-value" id="protein">—<span class="nut-unit">g</span></div></div>
+      <div class="nut-box"><div class="nut-label">Carbs</div><div class="nut-value" id="carbs">—<span class="nut-unit">g</span></div></div>
+      <div class="nut-box"><div class="nut-label">Fat</div><div class="nut-value" id="fat">—<span class="nut-unit">g</span></div></div>
+      <div class="nut-box"><div class="nut-label">Fiber</div><div class="nut-value" id="fiber">—<span class="nut-unit">g</span></div></div>
+      <div class="nut-box"><div class="nut-label">Sugar</div><div class="nut-value" id="sugar">—<span class="nut-unit">g</span></div></div>
+    </div>
+
+    <!-- Vitamins -->
+    <div class="section-label">Vitamins</div>
+    <div class="vitamins-row">
+      <div class="vit-box"><div class="vit-name">Vitamin A</div><div class="vit-value" id="vitA">—<span class="vit-unit">µg</span></div></div>
+      <div class="vit-box"><div class="vit-name">Vitamin C</div><div class="vit-value" id="vitC">—<span class="vit-unit">mg</span></div></div>
+      <div class="vit-box"><div class="vit-name">Vitamin K</div><div class="vit-value" id="vitK">—<span class="vit-unit">µg</span></div></div>
+    </div>
+
+    <!-- Extra info -->
+    <div class="section-label">More Info</div>
+    <div class="info-grid">
+      <div class="info-box">
+        <span class="info-icon">🕐</span>
+        <div class="info-title">Shelf Life</div>
+        <div class="info-text" id="shelfLife">—</div>
+      </div>
+      <div class="info-box">
+        <span class="info-icon">📦</span>
+        <div class="info-title">Storage Tip</div>
+        <div class="info-text" id="storageTip">—</div>
+      </div>
+      <div class="info-box">
+        <span class="info-icon">🌿</span>
+        <div class="info-title">Best Season</div>
+        <div class="info-text" id="bestSeason">—</div>
+      </div>
+      <div class="info-box">
+        <span class="info-icon">💚</span>
+        <div class="info-title">Health Benefits</div>
+        <ul class="benefits-list" id="healthBenefits"></ul>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="reset-btn" id="resetBtn" style="display:none">↺ Try another image</button>
+
+</div>
+
+<script>
+const fileInput   = document.getElementById('fileInput');
+const dropZone    = document.getElementById('dropZone');
+const previewWrap = document.getElementById('preview-wrap');
+const preview     = document.getElementById('preview');
+const analyseBtn  = document.getElementById('analyseBtn');
+const loader      = document.getElementById('loader');
+const errorBox    = document.getElementById('errorBox');
+const resultCard  = document.getElementById('resultCard');
+const resetBtn    = document.getElementById('resetBtn');
+
+let selectedFile = null;
+
+function setFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  selectedFile = file;
+  preview.src = URL.createObjectURL(file);
+  previewWrap.style.display = 'block';
+  analyseBtn.disabled = false;
+  hide(resultCard); hide(errorBox); resetBtn.style.display = 'none';
+}
+
+fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag'); setFile(e.dataTransfer.files[0]); });
+
+analyseBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  hide(resultCard); hide(errorBox);
+  show(loader); analyseBtn.disabled = true;
+
+  const fd = new FormData();
+  fd.append('image', selectedFile);
+
+  try {
+    const res  = await fetch('http://127.0.0.1:5000/predict', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) { showError(data.error || 'Something went wrong.'); }
+    else { renderResult(data); }
+  } catch(e) {
+    showError('Could not reach the server. Is app.py running?');
+  } finally {
+    hide(loader); analyseBtn.disabled = false;
+  }
+});
+
+resetBtn.addEventListener('click', () => {
+  selectedFile = null; fileInput.value = '';
+  previewWrap.style.display = 'none';
+  hide(resultCard); hide(errorBox);
+  analyseBtn.disabled = true; resetBtn.style.display = 'none';
+});
+
+function renderResult(d) {
+  document.getElementById('fruitName').textContent = d.name;
+
+  const badge = document.getElementById('freshnessBadge');
+  badge.textContent = d.freshness;
+  badge.className = 'freshness-badge ' + freshnessClass(d.freshness);
+
+  // Macros
+  setText('calories', d.calories, 'kcal');
+  setText('protein',  d.protein,  'g');
+  setText('carbs',    d.carbs,    'g');
+  setText('fat',      d.fat,      'g');
+  setText('fiber',    d.fiber,    'g');
+  setText('sugar',    d.sugar,    'g');
+
+  // Vitamins
+  setText('vitA', d.vitA, 'µg');
+  setText('vitC', d.vitC, 'mg');
+  setText('vitK', d.vitK, 'µg');
+
+  // Extra info
+  document.getElementById('shelfLife').textContent  = d.shelf_life  || 'N/A';
+  document.getElementById('storageTip').textContent = d.storage_tip || 'N/A';
+  document.getElementById('bestSeason').textContent = d.best_season || 'N/A';
+
+  const ul = document.getElementById('healthBenefits');
+  ul.innerHTML = '';
+  (d.health_benefits || []).forEach(b => {
+    const li = document.createElement('li');
+    li.textContent = b;
+    ul.appendChild(li);
+  });
+
+  show(resultCard);
+  resetBtn.style.display = 'block';
+}
+
+function setText(id, value, unit) {
+  document.getElementById(id).innerHTML =
+    `${value}<span class="${id.startsWith('vit') ? 'vit-unit' : 'nut-unit'}">${unit}</span>`;
+}
+
+function freshnessClass(f) {
+  const v = (f || '').toLowerCase();
+  if (v.includes('rotten'))   return 'rotten';
+  if (v.includes('overripe')) return 'overripe';
+  if (v.includes('slightly')) return 'slightly';
+  return 'fresh';
+}
+
+function showError(msg) { errorBox.textContent = msg; show(errorBox); resetBtn.style.display = 'block'; }
+function show(el) { el.classList.add('show'); }
+function hide(el) { el.classList.remove('show'); }
+</script>
+</body>
+</html>
